@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROYAL SIAM - Luxury Culinary & Food Ordering Experience</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Prompt', 'Kanit', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        sage: {
+                            50: '#f4f7f5',
+                            100: '#e3ebe6',
+                            200: '#c7d7cd',
+                            300: '#a3beaf',
+                            400: '#7a9e8b',
+                            500: '#5a826e',
+                            600: '#466857',
+                            700: '#385347',
+                            800: '#2f433b',
+                            900: '#283932',
+                            950: '#15211c',
+                        },
+                        warmbg: '#f8f9fa',
+                        cardbg: '#ffffff',
+                        gold: {
+                            100: '#fcf8ec',
+                            200: '#f7edce',
+                            300: '#f0ddaa',
+                            400: '#e5c47a',
+                            500: '#d9a742',
+                            600: '#b8842d',
+                            700: '#8e6120',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-6px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', 'Prompt', sans-serif;
+            background-color: #f4f6f5;
+            color: #2d3748;
+        }
+
+        /* Comfort Eye Glassmorphism & Cards */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(70, 104, 87, 0.12);
+        }
+
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid rgba(70, 104, 87, 0.12);
+            box-shadow: 0 4px 20px -2px rgba(40, 57, 50, 0.05);
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #385347 0%, #5a826e 50%, #8e6120 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gold-gradient-bg {
+            background: linear-gradient(135deg, #466857 0%, #5a826e 100%);
+            color: #ffffff;
+        }
+
+        .sage-glow {
+            box-shadow: 0 4px 20px -2px rgba(70, 104, 87, 0.25);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(244, 246, 245, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(70, 104, 87, 0.3);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(70, 104, 87, 0.6);
+        }
+
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+
+<body class="min-h-full flex flex-col antialiased text-slate-700 selection:bg-sage-100 selection:text-sage-800"
+      x-data="luxuryFoodApp()" 
+      x-init="initApp()" 
+      @keydown.window="resetInactivityTimer()"
+      @mousemove.window="resetInactivityTimer()">
+
+    <!-- Toast Notification Banner -->
+    <div class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 max-w-md w-full pointer-events-none px-4 sm:px-0">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div x-show="toast.visible"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-3 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="pointer-events-auto p-4 rounded-2xl shadow-xl flex items-center gap-3.5 border backdrop-blur-xl text-xs sm:text-sm font-medium"
+                 :class="{
+                     'bg-white/95 border-emerald-500/30 text-emerald-900 shadow-emerald-950/5': toast.type === 'success',
+                     'bg-white/95 border-amber-500/30 text-amber-900 shadow-amber-950/5': toast.type === 'warning',
+                     'bg-white/95 border-rose-500/30 text-rose-900 shadow-rose-950/5': toast.type === 'error',
+                     'bg-white/95 border-slate-300/60 text-slate-800': toast.type === 'info'
+                 }">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                     :class="{
+                         'bg-emerald-100 text-emerald-600': toast.type === 'success',
+                         'bg-amber-100 text-amber-600': toast.type === 'warning',
+                         'bg-rose-100 text-rose-600': toast.type === 'error',
+                         'bg-slate-100 text-slate-600': toast.type === 'info'
+                     }">
+                    <i class="fa-solid" :class="{
+                        'fa-circle-check': toast.type === 'success',
+                        'fa-triangle-exclamation': toast.type === 'warning',
+                        'fa-circle-xmark': toast.type === 'error',
+                        'fa-circle-info': toast.type === 'info'
+                    }"></i>
+                </div>
+                <span class="flex-1 leading-relaxed" x-text="toast.message"></span>
+                <button @click="removeToast(toast.id)" class="text-slate-400 hover:text-slate-600 transition p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </template>
+    </div>
+
+    <!-- System Lockout Overlay -->
+    <div x-show="isSystemLocked && currentRole === 'customer'" 
+         x-cloak
+         class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[9000] flex items-center justify-center p-6 text-center">
+        <div class="glass-card p-10 rounded-3xl max-w-md w-full space-y-5 border-sage-300 shadow-2xl">
+            <div class="w-20 h-20 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 mx-auto flex items-center justify-center text-3xl animate-pulse">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h2 class="font-serif text-2xl font-bold text-slate-800">ระบบปิดรับคำสั่งซื้อชั่วคราว</h2>
+            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                ขณะนี้ร้านอาหารอยู่ระหว่างการเตรียมวัตถุดิบหรือปรับปรุงระบบชั่วคราว ขออภัยในความไม่สะดวก
+            </p>
+            <button @click="requestRoleSwitch('admin')" class="text-xs text-sage-600 hover:text-sage-800 underline pt-2 block mx-auto">
+                สำหรับผู้ดูแลร้าน (Admin Authorization)
+            </button>
+        </div>
+    </div>
+
+    <!-- Floating Navigation Bar -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-sage-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+            
+            <!-- Brand Logo & Identity -->
+            <div class="flex items-center gap-3 cursor-pointer" @click="requestRoleSwitch('customer')">
+                <div class="w-12 h-12 rounded-2xl gold-gradient-bg flex items-center justify-center text-white font-bold text-2xl shadow-md shadow-sage-600/20">
+                    <i class="fa-solid fa-leaf"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-serif font-bold text-lg sm:text-xl tracking-wide text-sage-800">ROYAL SIAM</span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 border border-emerald-200 text-emerald-700">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            OPEN NOW
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 font-light tracking-widest uppercase">Healthy & Fine Dining Experience</p>
+                </div>
+            </div>
+
+            <!-- Role Tabs & Global Actions -->
+            <div class="flex items-center gap-3">
+                
+                <!-- Table Number Display -->
+                <template x-if="tableNumber">
+                    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-sage-50 border border-sage-200 text-sage-700 text-xs font-semibold">
+                        <i class="fa-solid fa-chair text-sage-600"></i>
+                        <span>โต๊ะ <strong x-text="tableNumber"></strong></span>
+                    </div>
+                </template>
+
+                <!-- Customer Share Link Trigger -->
+                <button @click="openShareModal()" 
+                        class="px-3.5 py-2 rounded-xl bg-white border border-sage-200 hover:bg-sage-50 text-sage-700 text-xs font-semibold transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-qrcode text-sage-600"></i>
+                    <span class="hidden md:inline">ลิงก์สั่งอาหาร</span>
+                </button>
+
+                <!-- Staff Role Switcher Tabs (Only if not in isolated customer mode) -->
+                <template x-if="!isIsolatedCustomer">
+                    <div class="hidden lg:flex items-center bg-sage-100/70 p-1.5 rounded-2xl border border-sage-200/60 text-xs">
+                        <button @click="requestRoleSwitch('customer')" 
+                                :class="currentRole === 'customer' ? 'bg-white text-sage-800 font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                                class="px-4 py-2 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-utensils"></i> หน้าเมนู
+                        </button>
+                        <button @click="requestRoleSwitch('kitchen')" 
+                                :class="currentRole === 'kitchen' ? 'bg-white text-sage-800 font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                                class="px-4 py-2 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-kitchen-set"></i> ครัว (KDS)
+                        </button>
+                        <button @click="requestRoleSwitch('admin')" 
+                                :class="currentRole === 'admin' ? 'bg-white text-sage-800 font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                                class="px-4 py-2 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved"></i> จัดการร้าน
+                        </button>
+                    </div>
+                </template>
+
+                <!-- Mobile Role Switch Selector -->
+                <template x-if="!isIsolatedCustomer">
+                    <div class="lg:hidden relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="p-2.5 rounded-xl border border-sage-200 bg-white text-sage-700 shadow-sm">
+                            <i class="fa-solid fa-user-gear"></i>
+                        </button>
+                        <div x-show="open" @click.away="open = false" x-cloak
+                             class="absolute right-0 mt-3 w-52 glass-card rounded-2xl border border-sage-200 p-2 shadow-xl z-50 text-xs space-y-1">
+                            <button @click="requestRoleSwitch('customer'); open = false;" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-sage-50 text-slate-700 flex items-center gap-2.5">
+                                <i class="fa-solid fa-utensils text-sage-600"></i> สั่งอาหาร (Customer)
+                            </button>
+                            <button @click="requestRoleSwitch('kitchen'); open = false;" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-sage-50 text-slate-700 flex items-center gap-2.5">
+                                <i class="fa-solid fa-kitchen-set text-sage-600"></i> หน้าครัว (KDS)
+                            </button>
+                            <button @click="requestRoleSwitch('admin'); open = false;" class="w-full text-left px-3.5 py-2.5 rounded-xl hover:bg-sage-50 text-slate-700 flex items-center gap-2.5">
+                                <i class="fa-solid fa-shield-halved text-sage-600"></i> จัดการระบบ (Admin)
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Customer Cart Drawer Trigger -->
+                <template x-if="currentRole === 'customer'">
+                    <button @click="isCartOpen = true" 
+                            class="relative gold-gradient-bg text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md hover:scale-105 transition flex items-center gap-2.5">
+                        <i class="fa-solid fa-bag-shopping text-base"></i>
+                        <span class="hidden sm:inline">ตะกร้า</span>
+                        <template x-if="cartTotalCount() > 0">
+                            <span class="bg-white text-sage-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold border border-sage-200 shadow-sm" 
+                                  x-text="cartTotalCount()"></span>
+                        </template>
+                    </button>
+                </template>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN BODY PORTAL -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- ================= CUSTOMER PORTAL (#customer) ================= -->
+        <div x-show="currentRole === 'customer'" class="space-y-8">
+            
+            <!-- Hero Banner Slider Display -->
+            <div class="relative rounded-3xl overflow-hidden glass-card border border-sage-200 p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8 bg-gradient-to-br from-white via-sage-50 to-emerald-50/30">
+                <div class="space-y-4 max-w-xl text-center md:text-left">
+                    <span class="px-3.5 py-1 rounded-full text-[11px] font-bold tracking-wider bg-sage-100 text-sage-800 uppercase border border-sage-200">
+                        Authentic Thai Culinary
+                    </span>
+                    <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-sage-900">
+                        สัมผัสรสชาติไทยประณีต สบายตา สบายใจ
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-600 font-light leading-relaxed">
+                        คัดสรรวัตถุดิบคุณภาพเยี่ยม ปรุงสดใหม่ด้วยความพิถีพิถัน สะอาด ปลอดภัย สั่งง่ายผ่านระบบออนไลน์ทันสมัย
+                    </p>
+                </div>
+                <div class="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full overflow-hidden border-4 border-white shadow-xl shrink-0 animate-float">
+                    <img src="https://images.unsplash.com/photo-1559847844-5315695dadae?w=800&q=80" alt="Royal Thai Cuisine" class="w-full h-full object-cover">
+                </div>
+            </div>
+
+            <!-- Category Filter Pills & Search Bar -->
+            <div class="flex flex-col lg:flex-row gap-4 justify-between items-center glass-card p-4 rounded-2xl border-sage-100">
+                
+                <!-- Pill Slider -->
+                <div class="flex items-center gap-2 overflow-x-auto w-full lg:w-auto pb-2 lg:pb-0 scrollbar-none">
+                    <template x-for="cat in categories" :key="cat.id">
+                        <button @click="selectedCategory = cat.id"
+                                :class="selectedCategory === cat.id ? 'gold-gradient-bg text-white font-bold shadow-sm' : 'bg-slate-100/80 text-slate-600 hover:bg-sage-50 hover:text-sage-800 border border-slate-200/50'"
+                                class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition flex items-center gap-2.5">
+                            <i class="fa-solid" :class="cat.icon"></i>
+                            <span x-text="cat.name"></span>
+                            <span class="text-[10px] opacity-70 px-1.5 py-0.5 rounded-md bg-black/10" x-text="getCategoryCount(cat.id)"></span>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Live Search Bar -->
+                <div class="relative w-full lg:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400 text-sm"></i>
+                    <input type="text" 
+                           x-model="searchQuery" 
+                           placeholder="ค้นหาเมนูอาหาร..." 
+                           class="w-full text-xs pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-sage-500 text-slate-800 placeholder-slate-400 transition">
+                </div>
+            </div>
+
+            <!-- Food Grid Layout -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <template x-for="food in filteredFoods()" :key="food.id">
+                    <div class="glass-card rounded-3xl overflow-hidden hover:shadow-xl hover:border-sage-300 hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between group">
+                        
+                        <!-- Image Container -->
+                        <div class="relative h-52 bg-slate-100 overflow-hidden">
+                            <img :src="food.image" :alt="food.name" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>
+                            
+                            <!-- Badges -->
+                            <div class="absolute top-3 left-3 flex flex-col gap-1.5">
+                                <span class="bg-white/90 backdrop-blur-md border border-slate-200 text-slate-700 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                                    <i class="fa-regular fa-clock text-sage-600"></i> <span x-text="food.prepTime"></span> นาที
+                                </span>
+                            </div>
+
+                            <span class="absolute top-3 right-3 bg-white/90 backdrop-blur-md border border-slate-200 text-slate-700 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                                <i class="fa-solid fa-star text-amber-500"></i> 4.9
+                            </span>
+
+                            <!-- Out of Stock Overlay -->
+                            <template x-if="!food.isAvailable">
+                                <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                                    <span class="bg-rose-500 text-white font-bold text-xs px-4 py-2 rounded-full shadow-lg">
+                                        สินค้าหมดชั่วคราว
+                                    </span>
+                                </div>
+                            </template>
+
+                            <div class="absolute bottom-3 left-4 text-white font-serif font-bold text-xl drop-shadow-md">
+                                ฿<span x-text="food.price"></span>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="p-5 space-y-3 flex-1 flex flex-col justify-between bg-white">
+                            <div>
+                                <h3 class="font-bold text-base text-slate-800 group-hover:text-sage-700 transition" x-text="food.name"></h3>
+                                <p class="text-xs text-slate-500 font-light line-clamp-2 mt-1.5 leading-relaxed" x-text="food.description"></p>
+                            </div>
+
+                            <button @click="openFoodModal(food)"
+                                    :disabled="!food.isAvailable || isSystemLocked"
+                                    :class="!food.isAvailable || isSystemLocked ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200' : 'gold-gradient-bg text-white font-bold hover:brightness-105 shadow-md'"
+                                    class="w-full py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>สั่งอาหาร / เลือกท็อปปิ้ง</span>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Active Orders Tracker Section -->
+            <template x-if="myOrders.length > 0">
+                <div class="glass-card rounded-3xl p-6 sm:p-8 border-sage-200 space-y-6">
+                    <div class="flex items-center justify-between border-b border-sage-100 pb-4">
+                        <h3 class="font-serif font-bold text-lg text-sage-800 flex items-center gap-3">
+                            <i class="fa-solid fa-utensils text-sage-600"></i>
+                            ติดตามสถานะคำสั่งซื้อของคุณ (Live Order Tracker)
+                        </h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <template x-for="order in myOrders" :key="order.id">
+                            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                                <div class="flex justify-between items-start border-b border-slate-200 pb-3">
+                                    <div>
+                                        <div class="font-bold text-sm text-sage-800" x-text="order.id"></div>
+                                        <div class="text-[10px] text-slate-400" x-text="order.timestamp"></div>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-full text-[11px] font-bold border shadow-sm"
+                                          :class="{
+                                              'bg-amber-50 border-amber-200 text-amber-700': order.status === 'pending',
+                                              'bg-blue-50 border-blue-200 text-blue-700': order.status === 'cooking',
+                                              'bg-emerald-50 border-emerald-200 text-emerald-700': order.status === 'completed'
+                                          }"
+                                          x-text="order.status === 'pending' ? 'รอดำเนินการ' : order.status === 'cooking' ? 'กำลังปรุงอาหาร' : 'เสร็จสิ้นพร้อมเสิร์ฟ'">
+                                    </span>
+                                </div>
+
+                                <div class="space-y-2 text-xs">
+                                    <template x-for="item in order.items" :key="item.name">
+                                        <div class="flex justify-between text-slate-700">
+                                            <span><span class="text-sage-700 font-bold" x-text="item.quantity"></span>x <span x-text="item.name"></span></span>
+                                            <span>฿<span x-text="item.price * item.quantity"></span></span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="pt-3 border-t border-slate-200 flex justify-between items-center text-xs">
+                                    <span class="text-slate-500">ยอดรวมชำระ</span>
+                                    <span class="font-bold text-sm text-sage-800">฿<span x-text="order.total"></span></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- ================= KITCHEN DISPLAY SYSTEM (#kitchen) ================= -->
+        <div x-show="currentRole === 'kitchen'" class="space-y-8">
+            <div class="glass-card p-6 rounded-3xl border-sage-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="font-serif text-2xl font-bold text-sage-800 flex items-center gap-3">
+                        <i class="fa-solid fa-fire text-amber-500"></i>
+                        จอแสดงผลห้องครัว (Kitchen Display System)
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">รับออเดอร์ realtime อัปเดตสถานะปรุงอาหาร และปรับแต่งรายการอาหาร</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs font-bold">
+                    <span class="px-4 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                        รอดำเนินการ: <span x-text="orders.filter(o => o.status === 'pending').length"></span>
+                    </span>
+                    <span class="px-4 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-700">
+                        กำลังปรุง: <span x-text="orders.filter(o => o.status === 'cooking').length"></span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- KDS Orders Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <template x-for="order in orders" :key="order.id">
+                    <div class="glass-card rounded-3xl border border-sage-200 overflow-hidden flex flex-col justify-between">
+                        <div class="p-5 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                            <div>
+                                <span class="font-bold text-sage-800 text-sm" x-text="order.id"></span>
+                                <template x-if="order.table">
+                                    <span class="ml-2 bg-sage-100 text-sage-800 text-[10px] px-2.5 py-0.5 rounded-full border border-sage-200 font-bold">
+                                        โต๊ะ <span x-text="order.table"></span>
+                                    </span>
+                                </template>
+                                <div class="text-[10px] text-slate-400 mt-0.5" x-text="order.timestamp"></div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-[10px] font-bold border shadow-sm"
+                                  :class="{
+                                      'bg-amber-50 border-amber-200 text-amber-700': order.status === 'pending',
+                                      'bg-blue-50 border-blue-200 text-blue-700': order.status === 'cooking',
+                                      'bg-emerald-50 border-emerald-200 text-emerald-700': order.status === 'completed'
+                                  }"
+                                  x-text="order.status === 'pending' ? 'รอดำเนินการ' : order.status === 'cooking' ? 'กำลังปรุง' : 'เสร็จสิ้น'">
+                            </span>
+                        </div>
+
+                        <!-- KDS Items -->
+                        <div class="p-5 space-y-3 flex-1 bg-white">
+                            <template x-for="(item, idx) in order.items" :key="idx">
+                                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1.5"
+                                     :class="item.outOfStock ? 'opacity-40 line-through' : ''">
+                                    <div class="flex justify-between items-start font-bold">
+                                        <span class="flex items-center gap-2 text-slate-800">
+                                            <span class="w-6 h-6 rounded-lg bg-sage-100 text-sage-700 flex items-center justify-center text-xs" x-text="item.quantity"></span>
+                                            <span x-text="item.name"></span>
+                                        </span>
+                                        <button @click="toggleKitchenItemOutOfStock(order, idx)" 
+                                                class="text-[10px] px-2 py-0.5 rounded border border-rose-300 text-rose-600 hover:bg-rose-50 transition">
+                                            <span x-text="item.outOfStock ? 'คืนรายการ' : 'ของหมด'"></span>
+                                        </button>
+                                    </div>
+                                    <template x-if="item.spiciness">
+                                        <div class="text-slate-600">เผ็ด: <span class="text-sage-700 font-semibold" x-text="item.spiciness"></span></div>
+                                    </template>
+                                    <template x-if="item.options && item.options.length > 0">
+                                        <div class="text-slate-500">ท็อปปิ้ง: <span x-text="item.options.join(', ')"></span></div>
+                                    </template>
+                                    <template x-if="item.notes">
+                                        <div class="text-amber-700 italic">"<span x-text="item.notes"></span>"</div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="p-4 bg-slate-50 border-t border-slate-200 flex gap-2">
+                            <template x-if="order.status === 'pending'">
+                                <button @click="updateOrderStatus(order.id, 'cooking')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-3 rounded-xl transition shadow-sm">
+                                    <i class="fa-solid fa-fire mr-1"></i> เริ่มปรุงอาหาร
+                                </button>
+                            </template>
+                            <template x-if="order.status === 'cooking'">
+                                <button @click="updateOrderStatus(order.id, 'completed')" class="flex-1 gold-gradient-bg text-white text-xs font-bold py-3 rounded-xl transition shadow-sm">
+                                    <i class="fa-solid fa-check mr-1"></i> ปรุงเสร็จแล้ว
+                                </button>
+                            </template>
+                            <template x-if="order.status === 'completed'">
+                                <span class="text-xs text-emerald-600 font-bold text-center w-full py-2">เสร็จสิ้นสมบูรณ์</span>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- ================= ADMIN PORTAL (#admin) ================= -->
+        <div x-show="currentRole === 'admin'" class="space-y-8">
+            <div class="glass-card p-6 rounded-3xl border-sage-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="font-serif text-2xl font-bold text-sage-800 flex items-center gap-3">
+                        <i class="fa-solid fa-shield-halved text-sage-600"></i>
+                        ศูนย์ควบคุมและจัดการระบบร้านอาหาร (Admin Center)
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">จัดการเมนูอาหาร, ปรับเปลี่ยนสถานะสินค้า และตรวจสอบบันทึกความปลอดภัย Audit Logs</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button @click="toggleEmergencyLockout()" 
+                            :class="isSystemLocked ? 'bg-rose-600 text-white' : 'bg-white border border-rose-300 text-rose-600 hover:bg-rose-50'"
+                            class="px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-lock"></i>
+                        <span x-text="isSystemLocked ? 'ปลดล็อกระบบฉุกเฉิน' : 'ล็อกระบบฉุกเฉิน'"></span>
+                    </button>
+                    <button @click="openAddDishModal()" class="gold-gradient-bg text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-2 shadow-md">
+                        <i class="fa-solid fa-plus"></i> เพิ่มเมนูอาหาร
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dish List Table / Grid -->
+            <div class="glass-card rounded-3xl border-sage-200 overflow-hidden space-y-4 p-6 bg-white">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h3 class="font-serif font-bold text-lg text-sage-800">รายการเมนูในระบบ (<span x-text="filteredAdminFoods().length"></span>)</h3>
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <input type="text" x-model="adminSearchQuery" placeholder="ค้นหาเมนู..." class="text-xs px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400">
+                        <select x-model="adminCategoryFilter" class="text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800">
+                            <option value="all">ทุกหมวดหมู่</option>
+                            <template x-for="cat in categories.filter(c => c.id !== 'all')" :key="cat.id">
+                                <option :value="cat.id" x-text="cat.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="divide-y divide-slate-100">
+                    <template x-for="food in filteredAdminFoods()" :key="food.id">
+                        <div class="py-4 flex flex-col sm:flex-row items-center justify-between gap-4 hover:bg-slate-50 transition px-2 rounded-2xl">
+                            <div class="flex items-center gap-4">
+                                <img :src="food.image" :alt="food.name" class="w-16 h-16 rounded-2xl object-cover border border-slate-200">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-bold text-sm text-slate-800" x-text="food.name"></h4>
+                                        <span class="text-[10px] px-2.5 py-0.5 rounded-full font-bold border"
+                                              :class="food.isAvailable ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'"
+                                              x-text="food.isAvailable ? 'พร้อมขาย' : 'สินค้าหมด'">
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-400 line-clamp-1 mt-0.5" x-text="food.description"></p>
+                                    <div class="text-xs text-sage-700 font-bold mt-1">฿<span x-text="food.price"></span> · <i class="fa-regular fa-clock"></i> <span x-text="food.prepTime"></span> นาที</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button @click="toggleDishAvailability(food)" 
+                                        class="px-3.5 py-2 rounded-xl text-xs font-semibold border transition"
+                                        :class="food.isAvailable ? 'border-amber-300 text-amber-700 hover:bg-amber-50' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'">
+                                    <span x-text="food.isAvailable ? 'ปิดขาย' : 'เปิดขาย'"></span>
+                                </button>
+                                <button @click="openEditDishModal(food)" class="px-3.5 py-2 rounded-xl border border-sage-200 text-sage-700 hover:bg-sage-50 text-xs font-semibold transition">
+                                    <i class="fa-solid fa-pen"></i> แก้ไข
+                                </button>
+                                <button @click="confirmDeleteDish(food.id)" class="px-3 py-2 rounded-xl border border-rose-200 text-rose-500 hover:bg-rose-50 text-xs transition">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Security Audit Log Table -->
+            <div class="glass-card rounded-3xl border-sage-200 p-6 space-y-4 bg-white">
+                <h3 class="font-serif font-bold text-lg text-sage-800 flex items-center gap-2">
+                    <i class="fa-solid fa-shield-cat"></i>
+                    บันทึกเหตุการณ์ความปลอดภัย (Audit Log Inspector)
+                </h3>
+                <div class="space-y-2.5 max-h-60 overflow-y-auto pr-2 text-xs">
+                    <template x-for="log in auditLogs" :key="log.id">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <span class="font-mono text-slate-400" x-text="log.timestamp"></span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sage-100 border border-sage-200 text-sage-800" x-text="log.user"></span>
+                                <span class="font-bold text-slate-800" x-text="log.action"></span>
+                                <span class="text-slate-500" x-text="log.details"></span>
+                            </div>
+                            <span class="font-mono text-[10px] text-slate-300" x-text="log.id"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ================= MODALS & DRAWERS ================= -->
+
+    <!-- CUSTOMER CART DRAWER -->
+    <div x-show="isCartOpen" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex justify-end">
+        
+        <div @click.away="isCartOpen = false"
+             class="w-full max-w-md bg-white border-l border-sage-200 h-full flex flex-col shadow-2xl">
+            
+            <div class="p-6 border-b border-sage-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-serif font-bold text-lg text-sage-800 flex items-center gap-2">
+                    <i class="fa-solid fa-bag-shopping text-sage-600"></i>
+                    ตะกร้าสินค้าของคุณ (<span x-text="cartTotalCount()"></span>)
+                </h3>
+                <button @click="isCartOpen = false" class="text-slate-400 hover:text-slate-700 transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Cart Items List -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                <template x-if="cart.length === 0">
+                    <div class="text-center py-24 text-slate-400 space-y-3">
+                        <i class="fa-solid fa-bag-shopping text-6xl opacity-30"></i>
+                        <p class="text-sm">ไม่มีรายการอาหารในตะกร้า</p>
+                    </div>
+                </template>
+
+                <template x-for="(item, index) in cart" :key="index">
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-4">
+                        <img :src="item.image" :alt="item.name" class="w-16 h-16 rounded-xl object-cover border border-slate-200">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-sm text-slate-800 truncate" x-text="item.name"></h4>
+                            <div class="text-[11px] text-slate-500 space-y-0.5 mt-0.5">
+                                <template x-if="item.spiciness">
+                                    <p>เผ็ด: <span class="text-sage-700 font-medium" x-text="item.spiciness"></span></p>
+                                </template>
+                                <template x-if="item.options && item.options.length > 0">
+                                    <p class="truncate">ท็อปปิ้ง: <span x-text="item.options.join(', ')"></span></p>
+                                </template>
+                                <template x-if="item.notes">
+                                    <p class="italic text-amber-700 truncate">"<span x-text="item.notes"></span>"</p>
+                                </template>
+                            </div>
+                            <div class="text-sage-700 font-bold text-sm mt-1">
+                                ฿<span x-text="item.price * item.quantity"></span>
+                            </div>
+                        </div>
+
+                        <!-- Quantity Control -->
+                        <div class="flex flex-col items-end gap-2">
+                            <div class="flex items-center gap-1.5 bg-white rounded-xl border border-slate-200 p-1">
+                                <button @click="item.quantity > 1 ? item.quantity-- : removeFromCart(index)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-sage-700">
+                                    <i class="fa-solid text-xs" :class="item.quantity === 1 ? 'fa-trash text-rose-500' : 'fa-minus'"></i>
+                                </button>
+                                <span class="w-6 text-center text-xs font-bold text-slate-800" x-text="item.quantity"></span>
+                                <button @click="item.quantity++" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-sage-700">
+                                    <i class="fa-solid fa-plus text-xs"></i>
+                                </button>
+                            </div>
+                            <button @click="editCartItem(index)" class="text-[11px] text-sage-600 hover:underline font-semibold flex items-center gap-1">
+                                <i class="fa-solid fa-pen"></i> แก้ไข
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Cart Summary Footer -->
+            <div class="p-6 border-t border-slate-200 bg-slate-50 space-y-4">
+                <div class="space-y-2 text-xs text-slate-600">
+                    <div class="flex justify-between">
+                        <span>ค่าอาหาร:</span>
+                        <span>฿<span x-text="cartSubtotal()"></span></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>ภาษี VAT (7%):</span>
+                        <span>฿<span x-text="cartVat()"></span></span>
+                    </div>
+                    <div class="flex justify-between font-bold text-sm text-slate-800 pt-2 border-t border-slate-200">
+                        <span>ราคารวมสุทธิ:</span>
+                        <span class="text-sage-800 font-serif text-base">฿<span x-text="cartTotalAmount()"></span></span>
+                    </div>
+                </div>
+
+                <button @click="placeOrder()" 
+                        :disabled="cart.length === 0 || isSystemLocked"
+                        class="w-full gold-gradient-bg text-white font-bold py-3.5 rounded-2xl transition flex justify-center items-center gap-2 text-sm shadow-md">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>ยืนยันการสั่งซื้อ</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOD CUSTOMIZATION MODAL -->
+    <div x-show="selectedFood !== null" 
+         x-cloak
+         x-transition
+         class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div @click.away="closeFoodModal()" class="glass-card rounded-3xl max-w-md w-full overflow-hidden border-sage-200 flex flex-col max-h-[90vh] bg-white">
+            <div class="relative h-56 bg-slate-100">
+                <img :src="selectedFood?.image" :alt="selectedFood?.name" class="w-full h-full object-cover">
+                <button @click="closeFoodModal()" class="absolute top-4 right-4 bg-white/90 border border-slate-200 text-slate-600 w-9 h-9 rounded-full flex items-center justify-center hover:bg-white transition shadow-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-5 flex-1 text-xs">
+                <div>
+                    <h3 class="font-serif font-bold text-xl text-sage-800" x-text="selectedFood?.name"></h3>
+                    <p class="text-slate-500 mt-1 leading-relaxed" x-text="selectedFood?.description"></p>
+                </div>
+
+                <!-- Spiciness Option -->
+                <template x-if="selectedFood?.spicinessLevels && selectedFood.spicinessLevels.length > 0">
+                    <div>
+                        <label class="block font-bold mb-2 text-sage-800">ระดับความเผ็ด:</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <template x-for="level in selectedFood.spicinessLevels" :key="level">
+                                <button @click="modalSpiciness = level"
+                                        :class="modalSpiciness === level ? 'gold-gradient-bg text-white font-bold shadow-sm' : 'bg-slate-50 text-slate-600 border border-slate-200'"
+                                        class="py-2.5 px-3 rounded-xl text-center transition">
+                                    <span x-text="level"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Toppings Options -->
+                <template x-if="selectedFood?.availableToppings && selectedFood.availableToppings.length > 0">
+                    <div>
+                        <label class="block font-bold mb-2 text-sage-800">ตัวเลือกท็อปปิ้งเพิ่มเติม:</label>
+                        <div class="space-y-2">
+                            <template x-for="top in selectedFood.availableToppings" :key="top">
+                                <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 transition">
+                                    <span class="font-medium text-slate-700" x-text="top"></span>
+                                    <input type="checkbox" :value="top" x-model="modalOptions" class="rounded text-sage-600 focus:ring-sage-500 bg-white border-slate-300 h-4 w-4">
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Notes -->
+                <div>
+                    <label class="block font-bold mb-1 text-sage-800">หมายเหตุถึงครัว:</label>
+                    <textarea x-model="modalNotes" placeholder="เช่น ขอแยกน้ำซุป..." class="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:border-sage-500" rows="2"></textarea>
+                </div>
+            </div>
+
+            <!-- Modal Action Footer -->
+            <div class="p-5 border-t border-slate-200 flex items-center justify-between bg-slate-50">
+                <div class="flex items-center gap-3">
+                    <button @click="if(modalQuantity > 1) modalQuantity--" class="w-9 h-9 rounded-xl border border-slate-200 bg-white flex items-center justify-center font-bold text-slate-600 hover:bg-slate-100 shadow-sm">-</button>
+                    <span class="w-6 text-center font-bold text-slate-800 text-sm" x-text="modalQuantity"></span>
+                    <button @click="modalQuantity++" class="w-9 h-9 rounded-xl border border-slate-200 bg-white flex items-center justify-center font-bold text-slate-600 hover:bg-slate-100 shadow-sm">+</button>
+                </div>
+
+                <button @click="saveCartItem()" class="gold-gradient-bg text-white font-bold px-6 py-3 rounded-xl text-xs transition flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-cart-plus"></i>
+                    <span x-text="editingCartIndex !== null ? 'บันทึกแก้ไข' : 'ใส่ตะกร้า'"></span>
+                    <span>(฿<span x-text="selectedFood ? getItemUnitPrice(selectedFood, modalOptions) * modalQuantity : 0"></span>)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN EDIT / ADD DISH MODAL -->
+    <div x-show="showDishModal" 
+         x-cloak
+         x-transition
+         class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div @click.away="showDishModal = false" class="glass-card rounded-3xl max-w-lg w-full border-sage-200 overflow-hidden flex flex-col max-h-[90vh] bg-white">
+            <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <h3 class="font-serif font-bold text-base text-sage-800 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span x-text="editingDish ? 'แก้ไขรายการอาหาร' : 'เพิ่มเมนูใหม่'"></span>
+                </h3>
+                <button @click="showDishModal = false" class="text-slate-400 hover:text-slate-700">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
+                <div>
+                    <label class="block font-bold mb-1 text-sage-800">ชื่อเมนูอาหาร *</label>
+                    <input type="text" x-model="dishFormData.name" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-sage-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold mb-1 text-sage-800">หมวดหมู่</label>
+                        <select x-model="dishFormData.category" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800">
+                            <template x-for="cat in categories.filter(c => c.id !== 'all')" :key="cat.id">
+                                <option :value="cat.id" x-text="cat.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1 text-sage-800">ราคา (บาท) *</label>
+                        <input type="number" x-model.number="dishFormData.price" min="0" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-sage-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold mb-1 text-sage-800">เวลาปรุง (นาที)</label>
+                        <input type="number" x-model.number="dishFormData.prepTime" min="1" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-sage-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1 text-sage-800">สถานะสต็อก</label>
+                        <select x-model="dishFormData.isAvailable" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800">
+                            <option :value="true">พร้อมขาย (In Stock)</option>
+                            <option :value="false">ของหมด (Out of Stock)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold mb-1 text-sage-800">รูปภาพ URL</label>
+                    <input type="text" x-model="dishFormData.image" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-sage-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-bold mb-1 text-sage-800">คำอธิบาย</label>
+                    <textarea x-model="dishFormData.description" rows="2" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-sage-500 focus:outline-none"></textarea>
+                </div>
+            </div>
+
+            <div class="p-5 border-t border-slate-200 flex justify-end gap-3 bg-slate-50">
+                <button @click="showDishModal = false" class="px-5 py-2.5 rounded-xl text-slate-500 font-semibold text-xs">ยกเลิก</button>
+                <button @click="saveDish()" class="gold-gradient-bg text-white font-bold px-6 py-2.5 rounded-xl text-xs transition shadow-md">บันทึกข้อมูล</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PIN SECURITY AUTH MODAL -->
+    <div x-show="showPinModal" 
+         x-cloak
+         x-transition
+         class="fixed inset-0 bg-slate-900/50 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div @click.away="showPinModal = false" class="glass-card rounded-3xl max-w-xs w-full p-8 border-sage-200 text-center space-y-5 shadow-2xl bg-white">
+            <div class="w-14 h-14 rounded-2xl gold-gradient-bg text-white mx-auto flex items-center justify-center text-2xl font-bold shadow-md">
+                <i class="fa-solid fa-key"></i>
+            </div>
+            <div>
+                <h3 class="font-serif font-bold text-lg text-sage-800">ยืนยันรหัส PIN สิทธิ์การใช้งาน</h3>
+                <p class="text-xs text-slate-500 mt-1">กรุณากรอก PIN สิทธิ์ระดับสูงเพื่อสลับบทบาท</p>
+                <p class="text-[10px] text-sage-600 italic mt-1">PIN ทดสอบ: Admin (0000) / Kitchen (1111)</p>
+            </div>
+            
+            <input type="password" 
+                   x-model="pinInput" 
+                   @keydown.enter="verifyPin()"
+                   maxlength="6"
+                   placeholder="••••" 
+                   class="w-full text-center text-3xl tracking-widest p-3 bg-slate-50 border border-slate-200 rounded-2xl text-sage-800 focus:border-sage-500 focus:outline-none">
+            
+            <template x-if="authError">
+                <p class="text-xs text-rose-500 font-semibold" x-text="authError"></p>
+            </template>
+
+            <div class="flex gap-2 pt-2">
+                <button @click="showPinModal = false" class="flex-1 py-3 rounded-xl border border-slate-200 text-xs text-slate-500 font-semibold">ยกเลิก</button>
+                <button @click="verifyPin()" class="flex-1 py-3 gold-gradient-bg text-white rounded-xl text-xs font-bold transition shadow-md">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOMER DEDICATED LINK SHARE MODAL -->
+    <div x-show="showShareModal" 
+         x-cloak
+         x-transition
+         class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div @click.away="showShareModal = false" class="glass-card rounded-3xl max-w-md w-full p-6 border-sage-200 space-y-5 bg-white">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                <h3 class="font-serif font-bold text-base text-sage-800 flex items-center gap-2">
+                    <i class="fa-solid fa-qrcode text-sage-600"></i>
+                    เครื่องมือสร้างลิงก์สั่งอาหารลูกค้า (Direct Customer URL)
+                </h3>
+                <button @click="showShareModal = false" class="text-slate-400 hover:text-slate-700">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-500 leading-relaxed">
+                ส่ง URL นี้ให้ลูกค้า ลิงก์นี้จะแยกสภาพแวดล้อมเฉพาะหน้าสั่งอาหาร ซ่อนแผงควบคุม KDS และ Admin อย่างปลอดภัย
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold mb-1.5 text-sage-800">หมายเลขโต๊ะ:</label>
+                    <input type="text" x-model="shareTableInput" @input="updateShareUrl()" placeholder="เช่น Table 01, VIP-A" class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-sage-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold mb-1.5 text-sage-800">ลิงก์สั่งอาหารตรง:</label>
+                    <div class="flex gap-2">
+                        <input type="text" readonly :value="generatedCustomerUrl" class="flex-1 text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-700">
+                        <button @click="copyCustomerLink()" class="px-4 py-3 gold-gradient-bg text-white rounded-xl text-xs font-bold transition shrink-0 flex items-center gap-1.5 shadow-md">
+                            <i class="fa-solid fa-copy"></i> คัดลอก
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2 text-center">
+                <button @click="window.open(generatedCustomerUrl, '_blank')" class="text-xs text-sage-600 hover:underline font-semibold">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> เปิดทดสอบลิงก์ใน Tap ใหม่
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP SCRIPT -->
+    <script>
+        function luxuryFoodApp() {
+            return {
+                // Roles & URL Hash Routing
+                currentRole: 'customer',
+                isIsolatedCustomer: false,
+                tableNumber: '',
+                isSystemLocked: false,
+                inactivityTimer: null,
+
+                // Authentication Security
+                showPinModal: false,
+                pinInput: '',
+                pinTargetRole: '',
+                authError: '',
+                rolePins: {
+                    admin: '0000',
+                    kitchen: '1111'
+                },
+
+                // Notifications & Alerts
+                toasts: [],
+
+                // Customer Search & Filtering
+                selectedCategory: 'all',
+                searchQuery: '',
+
+                // Cart & Item Customization
+                cart: [],
+                isCartOpen: false,
+                editingCartIndex: null,
+                selectedFood: null,
+                modalSpiciness: '',
+                modalOptions: [],
+                modalNotes: '',
+                modalQuantity: 1,
+
+                // Admin Dish Management
+                showDishModal: false,
+                editingDish: null,
+                dishFormData: {
+                    id: '',
+                    name: '',
+                    category: 'main',
+                    price: 100,
+                    prepTime: 10,
+                    description: '',
+                    image: '',
+                    isAvailable: true,
+                    spicinessLevels: [],
+                    availableToppings: []
+                },
+                adminSearchQuery: '',
+                adminCategoryFilter: 'all',
+
+                // Share Tool
+                showShareModal: false,
+                shareTableInput: '',
+                generatedCustomerUrl: '',
+
+                // Master Categories
+                categories: [
+                    { id: 'all', name: 'ทั้งหมด', icon: 'fa-border-all' },
+                    { id: 'main', name: 'อาหารจานหลัก', icon: 'fa-bowl-rice' },
+                    { id: 'soup', name: 'ต้ม/แกงพรีเมียม', icon: 'fa-soap' },
+                    { id: 'appetizer', name: 'ของว่างประณีต', icon: 'fa-cookie' },
+                    { id: 'drink', name: 'เครื่องดื่มเอกลักษณ์', icon: 'fa-glass-water' }
+                ],
+
+                // Master Food Database
+                foods: [
+                    { id: 'f1', name: 'กุ้งแม่น้ำเผาซอสมันกุ้งเสวย', category: 'main', price: 490, prepTime: 20, image: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=800&q=80', description: 'กุ้งแม่น้ำตัวโตเผาสุกกำลังดี พร้อมซอสมันกุ้งเข้มข้นสูตรชาววัง', spicinessLevels: ['ไม่เผ็ด', 'เผ็ดปานกลาง', 'เผ็ดจัดจ้าน'], availableToppings: ['เพิ่มข้าวหอมมะลิ (+25.-)', 'เพิ่มมันกุ้ง (+60.-)'], isAvailable: true },
+                    { id: 'f2', name: 'มัสมั่นเนื้อน่องลายออสเตรเลีย', category: 'soup', price: 380, prepTime: 25, image: 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?w=800&q=80', description: 'แกงมัสมั่นเข้มข้น หอมกลิ่นเครื่องเทศ ถั่วหิมพานต์ และเนื้อน่องลายนุ่มละลายในปาก', spicinessLevels: ['เผ็ดน้อย', 'เผ็ดปานกลาง'], availableToppings: ['โรตีทอดกรอบ (+45.-)'], isAvailable: true },
+                    { id: 'f3', name: 'ผัดไทยกุ้งมังกรเส้นจันทน์', category: 'main', price: 550, prepTime: 18, image: 'https://images.unsplash.com/photo-1559847844-5315695dadae?w=800&q=80', description: 'ผัดไทยเส้นจันทน์เหนียวนุ่ม ผัดซอสมะขามเปียกเข้มข้น เสิร์ฟพร้อมกุ้งมังกรสด', spicinessLevels: ['ไม่เผ็ด', 'เผ็ดน้อย', 'เผ็ดปานกลาง'], availableToppings: ['เพิ่มกุ้งสด (+120.-)'], isAvailable: true },
+                    { id: 'f4', name: 'ยำส้มโอทองดีกุ้งเสียบ', category: 'appetizer', price: 260, prepTime: 12, image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=80', description: 'ส้มโอหวานฉ่ำ คลุกซอยำโบราณ โรยด้วยกุ้งเสียบทอดกรอบและหอมเจียว', spicinessLevels: ['เผ็ดน้อย', 'เผ็ดปานกลาง'], availableToppings: [], isAvailable: true },
+                    { id: 'f5', name: 'ชาไทยออแกนิคสูตรชักทองคำ', category: 'drink', price: 125, prepTime: 5, image: 'https://images.unsplash.com/photo-1558857563-b371033873b8?w=800&q=80', description: 'ชาไทยเบลนด์พิเศษ หอมเข้ม โรยด้วยผงทองคำกินได้พรีเมียม', spicinessLevels: [], availableToppings: ['เพิ่มเฉาก๊วย (+20.-)', 'เพิ่มวิปครีม (+25.-)'], isAvailable: true }
+                ],
+
+                orders: [],
+                myOrders: [],
+                auditLogs: [],
+
+                // INITIALIZATION
+                initApp() {
+                    this.handleHashRouting();
+                    window.addEventListener('hashchange', () => this.handleHashRouting());
+                    this.logAudit('SECURITY_INIT', 'เปิดใช้งานระบบและเริ่มต้นความปลอดภัย');
+                    this.resetInactivityTimer();
+                },
+
+                handleHashRouting() {
+                    const hash = window.location.hash || '#customer';
+                    const [rolePart, queryPart] = hash.split('?');
+                    
+                    if (queryPart) {
+                        const params = new URLSearchParams(queryPart);
+                        if (params.has('table')) {
+                            this.tableNumber = this.sanitizeInput(params.get('table'));
+                        }
+                    }
+
+                    if (rolePart === '#customer') {
+                        this.currentRole = 'customer';
+                    } else if (rolePart === '#kitchen') {
+                        if (this.currentRole !== 'kitchen') this.requestRoleSwitch('kitchen');
+                    } else if (rolePart === '#admin') {
+                        if (this.currentRole !== 'admin') this.requestRoleSwitch('admin');
+                    }
+                },
+
+                // SECURITY HELPERS
+                sanitizeInput(str) {
+                    if (typeof str !== 'string') return str;
+                    return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
+                },
+
+                logAudit(action, details) {
+                    this.auditLogs.unshift({
+                        id: 'HASH-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+                        timestamp: new Date().toLocaleTimeString('th-TH'),
+                        action: this.sanitizeInput(action),
+                        details: this.sanitizeInput(details),
+                        user: this.currentRole.toUpperCase()
+                    });
+                },
+
+                resetInactivityTimer() {
+                    clearTimeout(this.inactivityTimer);
+                    if (this.currentRole === 'admin' || this.currentRole === 'kitchen') {
+                        this.inactivityTimer = setTimeout(() => {
+                            this.currentRole = 'customer';
+                            window.location.hash = '#customer';
+                            this.showToast('สลับบทบาทกลับเป็นสิทธิ์ลูกค้าเนื่องจากไม่มีการใช้งาน', 'warning');
+                            this.logAudit('SESSION_TIMEOUT', 'ระบบตัดสิทธิ์กลับเป็น Customer อัตโนมัติ');
+                        }, 15 * 60 * 1000);
+                    }
+                },
+
+                requestRoleSwitch(targetRole) {
+                    if (targetRole === 'customer') {
+                        this.currentRole = 'customer';
+                        window.location.hash = '#customer' + (this.tableNumber ? `?table=${this.tableNumber}` : '');
+                        return;
+                    }
+                    this.pinTargetRole = targetRole;
+                    this.pinInput = '';
+                    this.authError = '';
+                    this.showPinModal = true;
+                },
+
+                verifyPin() {
+                    const requiredPin = this.rolePins[this.pinTargetRole] || '0000';
+                    if (this.pinInput === requiredPin) {
+                        this.currentRole = this.pinTargetRole;
+                        window.location.hash = '#' + this.pinTargetRole;
+                        this.showPinModal = false;
+                        this.showToast(`เข้าสู่บทบาท ${this.pinTargetRole.toUpperCase()} สำเร็จ`, 'success');
+                        this.logAudit('AUTH_SUCCESS', `สลับบทบาทเป็น ${this.pinTargetRole.toUpperCase()}`);
+                        this.resetInactivityTimer();
+                    } else {
+                        this.authError = 'รหัส PIN ไม่ถูกต้อง';
+                        this.logAudit('AUTH_FAILURE', `กรอก PIN ผิดในการสลับเป็น ${this.pinTargetRole.toUpperCase()}`);
+                    }
+                },
+
+                toggleEmergencyLockout() {
+                    this.isSystemLocked = !this.isSystemLocked;
+                    const status = this.isSystemLocked ? 'เปิดใช้งาน' : 'ยกเลิก';
+                    this.showToast(`โหมดล็อกระบบฉุกเฉิน: ${status}`, this.isSystemLocked ? 'error' : 'success');
+                    this.logAudit('EMERGENCY_LOCKOUT', `สวิตช์โหมดล็อกฉุกเฉินเป็น: ${status}`);
+                },
+
+                // TOAST CONTROLLER
+                showToast(message, type = 'info') {
+                    const id = Date.now();
+                    this.toasts.push({ id, message, type, visible: true });
+                    setTimeout(() => this.removeToast(id), 4000);
+                },
+
+                removeToast(id) {
+                    const t = this.toasts.find(item => item.id === id);
+                    if (t) t.visible = false;
+                },
+
+                // FOOD FILTER & CUSTOMER CART
+                getCategoryCount(catId) {
+                    if (catId === 'all') return this.foods.length;
+                    return this.foods.filter(f => f.category === catId).length;
+                },
+
+                filteredFoods() {
+                    return this.foods.filter(food => {
+                        const matchesCat = this.selectedCategory === 'all' || food.category === this.selectedCategory;
+                        const matchesSearch = food.name.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        return matchesCat && matchesSearch;
+                    });
+                },
+
+                getItemUnitPrice(food, selectedOptions) {
+                    if (!food) return 0;
+                    let price = Number(food.price) || 0;
+                    if (selectedOptions && selectedOptions.length > 0) {
+                        selectedOptions.forEach(opt => {
+                            const match = opt.match(/\(\+(\d+)\.-\)/);
+                            if (match) price += parseInt(match[1]);
+                        });
+                    }
+                    return price;
+                },
+
+                openFoodModal(food) {
+                    this.editingCartIndex = null;
+                    this.selectedFood = food;
+                    this.modalSpiciness = food.spicinessLevels.length > 0 ? food.spicinessLevels[0] : '';
+                    this.modalOptions = [];
+                    this.modalNotes = '';
+                    this.modalQuantity = 1;
+                },
+
+                editCartItem(index) {
+                    const item = this.cart[index];
+                    if (!item) return;
+
+                    const food = this.foods.find(f => f.id === item.id) || item;
+                    this.editingCartIndex = index;
+                    this.selectedFood = food;
+                    this.modalSpiciness = item.spiciness || '';
+                    this.modalOptions = item.options ? [...item.options] : [];
+                    this.modalNotes = item.notes || '';
+                    this.modalQuantity = item.quantity || 1;
+                },
+
+                closeFoodModal() {
+                    this.selectedFood = null;
+                    this.editingCartIndex = null;
+                },
+
+                saveCartItem() {
+                    if (!this.selectedFood) return;
+
+                    const unitPrice = this.getItemUnitPrice(this.selectedFood, this.modalOptions);
+                    const cartItem = {
+                        id: this.selectedFood.id,
+                        name: this.selectedFood.name,
+                        price: unitPrice,
+                        spiciness: this.modalSpiciness,
+                        options: [...this.modalOptions],
+                        notes: this.sanitizeInput(this.modalNotes),
+                        quantity: this.modalQuantity,
+                        image: this.selectedFood.image
+                    };
+
+                    if (this.editingCartIndex !== null && this.editingCartIndex >= 0) {
+                        this.cart[this.editingCartIndex] = cartItem;
+                        this.showToast('อัปเดตรายการในตะกร้าเรียบร้อย', 'success');
+                    } else {
+                        this.cart.push(cartItem);
+                        this.showToast('เพิ่มรายการลงตะกร้าเรียบร้อย', 'success');
+                    }
+
+                    this.closeFoodModal();
+                },
+
+                removeFromCart(index) {
+                    this.cart.splice(index, 1);
+                    this.showToast('นำรายการออกจากตะกร้าแล้ว', 'info');
+                },
+
+                cartTotalCount() {
+                    return this.cart.reduce((sum, item) => sum + item.quantity, 0);
+                },
+
+                cartSubtotal() {
+                    return this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                },
+
+                cartVat() {
+                    return Math.round(this.cartSubtotal() * 0.07);
+                },
+
+                cartTotalAmount() {
+                    return this.cartSubtotal() + this.cartVat();
+                },
+
+                placeOrder() {
+                    if (this.cart.length === 0) return;
+
+                    const newOrder = {
+                        id: 'ROYAL-' + Date.now().toString().slice(-5),
+                        table: this.tableNumber || 'Takeaway',
+                        items: JSON.parse(JSON.stringify(this.cart)),
+                        total: this.cartTotalAmount(),
+                        status: 'pending',
+                        timestamp: new Date().toLocaleTimeString('th-TH')
+                    };
+
+                    this.orders.unshift(newOrder);
+                    this.myOrders.unshift(newOrder);
+                    this.cart = [];
+                    this.isCartOpen = false;
+
+                    this.showToast('ส่งรายการคำสั่งซื้อเข้าห้องครัวเรียบร้อย', 'success');
+                    this.logAudit('ORDER_PLACED', `สร้างคำสั่งซื้อ ${newOrder.id} มูลค่า ฿${newOrder.total}`);
+                },
+
+                // KITCHEN CONTROLLER
+                updateOrderStatus(orderId, status) {
+                    const order = this.orders.find(o => o.id === orderId);
+                    if (order) {
+                        order.status = status;
+                        this.showToast(`อัปเดตสถานะออเดอร์ ${orderId}`, 'info');
+                        this.logAudit('KITCHEN_STATUS', `เปลี่ยนสถานะ ${orderId} เป็น ${status}`);
+                    }
+                },
+
+                toggleKitchenItemOutOfStock(order, itemIndex) {
+                    const item = order.items[itemIndex];
+                    if (item) {
+                        item.outOfStock = !item.outOfStock;
+                        this.showToast(`ปรับสถานะรายการ ${item.name}`, 'warning');
+                    }
+                },
+
+                // ADMIN CRUD MENU
+                filteredAdminFoods() {
+                    return this.foods.filter(food => {
+                        const matchesCat = this.adminCategoryFilter === 'all' || food.category === this.adminCategoryFilter;
+                        const matchesSearch = food.name.toLowerCase().includes(this.adminSearchQuery.toLowerCase());
+                        return matchesCat && matchesSearch;
+                    });
+                },
+
+                openAddDishModal() {
+                    this.editingDish = null;
+                    this.dishFormData = {
+                        id: 'f' + Date.now(),
+                        name: '',
+                        category: 'main',
+                        price: 150,
+                        prepTime: 15,
+                        description: '',
+                        image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80',
+                        isAvailable: true,
+                        spicinessLevels: ['ไม่เผ็ด', 'เผ็ดน้อย', 'เผ็ดปานกลาง', 'เผ็ดมาก'],
+                        availableToppings: ['เพิ่มข้าวหอมมะลิ (+25.-)']
+                    };
+                    this.showDishModal = true;
+                },
+
+                openEditDishModal(food) {
+                    this.editingDish = food;
+                    this.dishFormData = JSON.parse(JSON.stringify(food));
+                    this.showDishModal = true;
+                },
+
+                saveDish() {
+                    if (!this.dishFormData.name || this.dishFormData.price <= 0) {
+                        this.showToast('กรุณากรอกข้อมูลให้สมบูรณ์', 'error');
+                        return;
+                    }
+
+                    this.dishFormData.name = this.sanitizeInput(this.dishFormData.name);
+                    this.dishFormData.description = this.sanitizeInput(this.dishFormData.description);
+
+                    if (this.editingDish) {
+                        const idx = this.foods.findIndex(f => f.id === this.editingDish.id);
+                        if (idx !== -1) {
+                            this.foods[idx] = { ...this.dishFormData };
+                            this.showToast(`บันทึกการแก้ไขเมนู "${this.dishFormData.name}"`, 'success');
+                            this.logAudit('ADMIN_EDIT_MENU', `แก้ไขเมนู ${this.dishFormData.name}`);
+                        }
+                    } else {
+                        this.foods.push({ ...this.dishFormData });
+                        this.showToast(`เพิ่มเมนูใหม่ "${this.dishFormData.name}"`, 'success');
+                        this.logAudit('ADMIN_ADD_MENU', `เพิ่มเมนู ${this.dishFormData.name}`);
+                    }
+
+                    this.showDishModal = false;
+                },
+
+                toggleDishAvailability(food) {
+                    food.isAvailable = !food.isAvailable;
+                    this.showToast(`ปรับสถานะสต็อก ${food.name}`, 'info');
+                    this.logAudit('ADMIN_STOCK_TOGGLE', `สลับสต็อก ${food.name} เป็น ${food.isAvailable ? 'In Stock' : 'Out of Stock'}`);
+                },
+
+                confirmDeleteDish(foodId) {
+                    if (confirm('คุณแน่ใจหรือไม่ที่จะลบเมนูนี้ออกจากระบบ?')) {
+                        const idx = this.foods.findIndex(f => f.id === foodId);
+                        if (idx !== -1) {
+                            const name = this.foods[idx].name;
+                            this.foods.splice(idx, 1);
+                            this.showToast(`ลบเมนู "${name}" แล้ว`, 'warning');
+                            this.logAudit('ADMIN_DELETE_MENU', `ลบเมนู ${name}`);
+                        }
+                    }
+                },
+
+                // SHARE LINK GENERATOR
+                openShareModal() {
+                    this.shareTableInput = this.tableNumber || '';
+                    this.updateShareUrl();
+                    this.showShareModal = true;
+                },
+
+                updateShareUrl() {
+                    const baseUrl = window.location.origin + window.location.pathname;
+                    const tableQuery = this.shareTableInput ? `?table=${encodeURIComponent(this.shareTableInput)}` : '';
+                    this.generatedCustomerUrl = `${baseUrl}#customer${tableQuery}`;
+                },
+
+                copyCustomerLink() {
+                    navigator.clipboard.writeText(this.generatedCustomerUrl).then(() => {
+                        this.showToast('คัดลอก URL สั่งอาหารเรียบร้อยแล้ว!', 'success');
+                    }).catch(() => {
+                        this.showToast('คัดลอกไม่สำเร็จ กรุณาคัดลอกด้วยตนเอง', 'warning');
+                    });
+                }
+            };
+        }
+    </script>
+</body>
+</html>
